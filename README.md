@@ -19,8 +19,10 @@ already served on `127.0.0.1:11434` (Ollama).
     module10_redteam_capstone.ipynb   Labs 91-100 — red teaming, compliance, capstone (full OWASP)
     docs/module09-hardware-writeup.md Labs 81-90  — hardware-rooted security (read-only write-up)
     docs/not-runnable-labs.md         write-ups for labs that need infra/hardware/GPU
+    gap_llm05_output_handling.ipynb   LLM05 — output handling: XSS/SQLi/SSTI/cmd/path (course gap)
+    gap_llm03_supply_chain.ipynb      LLM03 — supply chain: integrity/pickle/pinning/typosquat/BOM
+    gap_llm09_misinformation.ipynb    LLM09 — misinformation: hallucination, grounding, verification
     labs-source.md                    extracted course text (gitignored — paid content)
-    (gap modules LLM05/LLM03/LLM09 in progress)
 
 ## OWASP Top 10 for LLM (2025) anchoring
 
@@ -32,9 +34,9 @@ framework rather than the course's arbitrary numbering:
 | 2 Prompt Injection | **LLM01** Prompt Injection |
 | 3 Guardrails | **LLM01** defences |
 | 4 RAG Poisoning & Exfiltration | **LLM04** Data/Model Poisoning, **LLM08** Vector/Embedding |
-| *gap* output handling | **LLM05** Improper Output Handling |
-| *gap* supply chain | **LLM03** Supply Chain |
-| *gap* misinformation | **LLM09** Misinformation |
+| gap_llm05 output handling | **LLM05** Improper Output Handling ✓ |
+| gap_llm03 supply chain | **LLM03** Supply Chain ✓ |
+| gap_llm09 misinformation | **LLM09** Misinformation ✓ |
 
 The *gap* rows are classes the Udemy course under-covers; built as extra modules on the same
 harness, same executed-clean bar.
