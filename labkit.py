@@ -159,6 +159,28 @@ def generate(prompt: str, model: str = DEFAULT_TARGET,
     return resp.get("response", "")
 
 
+# --- embeddings: for the semantic-similarity guardrail (Module 3) -----------
+
+# bge-m3 is already served and needs no extra install, unlike the course's
+# sentence-transformers/all-MiniLM. 1024-dim vs MiniLM's 384, same cosine idea.
+EMBED_MODEL = "bge-m3"
+
+
+def embed(text: str, model: str = EMBED_MODEL) -> list[float]:
+    """One text to one vector, via Ollama. The semantic guard compares a
+    prompt's vector to the vectors of known attacks."""
+    return _post("/api/embeddings", {"model": model, "prompt": text})["embedding"]
+
+
+def cosine(a: list[float], b: list[float]) -> float:
+    """Cosine similarity without numpy - the guard needs one number, not a
+    matrix. 1.0 is identical direction, 0.0 orthogonal."""
+    dot = sum(x * y for x, y in zip(a, b))
+    na = sum(x * x for x in a) ** 0.5
+    nb = sum(y * y for y in b) ** 0.5
+    return dot / (na * nb) if na and nb else 0.0
+
+
 # --- verdicts: the "look for X in the output" step, made checkable ----------
 
 REFUSAL_MARKERS = (
