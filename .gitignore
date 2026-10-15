@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*_executed.ipynb
+data/
+data-run.log
+.venv/
+# garak output
+garak.*.jsonl
+garak.*.html
+*.report.jsonl
+
+# Paid Udemy course text — keep local, never push to a public remote
+labs-source.md
