@@ -12,3 +12,6 @@ garak.*.html
 
 # Paid Udemy course text — keep local, never push to a public remote
 labs-source.md
+
+# Paid OWASP course transcripts — local reference only, never push
+owasp-transcripts.md
