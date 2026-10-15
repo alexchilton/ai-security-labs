@@ -230,6 +230,83 @@ def rag_answer(store: "VectorStore", question: str, k: int = 3,
     return {"reply": reply, "retrieved": hits, "context": context}
 
 
+# --- a tool-calling agent, for the agentic attacks (Module 6+) --------------
+
+class Tool:
+    """A tool the agent can call. SAFE BY DEFAULT: the function records the call
+    and returns a canned result rather than doing anything real. An agentic
+    attack is demonstrated by the agent being tricked into *calling* a dangerous
+    tool - that call is the vulnerability - without ever running rm, a shell, or
+    a real network request on the host."""
+
+    def __init__(self, name: str, description: str, params: dict,
+                 fn=None, dangerous: bool = False):
+        self.name = name
+        self.description = description
+        self.params = params          # JSON-schema properties dict
+        self.fn = fn                   # the (mock) implementation
+        self.dangerous = dangerous     # flags a tool a HITL/guardrail should gate
+
+    def schema(self) -> dict:
+        return {"type": "function", "function": {
+            "name": self.name, "description": self.description,
+            "parameters": {"type": "object", "properties": self.params,
+                           "required": list(self.params)}}}
+
+
+class Agent:
+    """A minimal tool-calling agent on Ollama native function-calling.
+
+    Runs the think-act loop: the model emits tool_calls, each is executed (the
+    mock fn), results are fed back, until a final text answer or max_steps. Every
+    call is recorded in `.calls` so a lab can assert what the agent was tricked
+    into doing. No LangChain, no real MCP server, no OpenAI.
+    """
+
+    def __init__(self, tools: list["Tool"], system: str = "",
+                 model: str = DEFAULT_TARGET, max_steps: int = 6,
+                 confirm=None):
+        self.tools = {t.name: t for t in tools}
+        self.system = system
+        self.model = model
+        self.max_steps = max_steps
+        self.confirm = confirm        # callable(tool, args)->bool; None = allow all
+        self.calls: list[dict] = []   # [{tool, args, result, blocked}]
+
+    def run(self, user_input: str) -> dict:
+        msgs = ([{"role": "system", "content": self.system}] if self.system else []) \
+            + [{"role": "user", "content": user_input}]
+        schemas = [t.schema() for t in self.tools.values()]
+        for _ in range(self.max_steps):
+            resp = _post("/api/chat", {"model": self.model, "messages": msgs,
+                                       "tools": schemas, "stream": False})
+            m = resp.get("message", {})
+            tcs = m.get("tool_calls") or []
+            if not tcs:
+                return {"reply": m.get("content", ""), "calls": self.calls}
+            msgs.append(m)
+            for tc in tcs:
+                name = tc["function"]["name"]
+                args = tc["function"].get("arguments", {})
+                tool = self.tools.get(name)
+                blocked = False
+                if tool is None:
+                    result = f"ERROR: no such tool {name}"
+                elif self.confirm and not self.confirm(tool, args):
+                    result = "BLOCKED: human approval required and not granted"
+                    blocked = True
+                else:
+                    result = tool.fn(**args) if tool.fn else f"(mock) {name} ran"
+                self.calls.append({"tool": name, "args": args,
+                                   "result": str(result), "blocked": blocked})
+                msgs.append({"role": "tool", "content": str(result)})
+        return {"reply": "(max steps reached)", "calls": self.calls}
+
+    def called(self, name: str) -> bool:
+        """Did the agent call this tool (and was it not blocked)?"""
+        return any(c["tool"] == name and not c["blocked"] for c in self.calls)
+
+
 # --- a local listener, for the exfiltration attacks -------------------------
 
 class Listener:
