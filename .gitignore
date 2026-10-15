@@ -3,7 +3,7 @@ __pycache__/
 .ipynb_checkpoints/
 *_executed.ipynb
 data/
-data-run.log
+data-run*.log
 .venv/
 # garak output
 garak.*.jsonl
