@@ -181,6 +181,104 @@ def cosine(a: list[float], b: list[float]) -> float:
     return dot / (na * nb) if na and nb else 0.0
 
 
+# --- a minimal RAG store, for the data-layer attacks (Module 4+) ------------
+
+class VectorStore:
+    """In-process embed-and-retrieve. The course runs Milvus (three Docker
+    containers) or Chroma; the attack surface is identical - retrieval returns
+    the nearest documents by cosine and the pipeline trusts them - so this is
+    the same lesson without the infrastructure. bge-m3 does the embedding.
+
+    Documents are attacker-reachable content: a RAG poisoning attack is simply
+    add()-ing a document whose text is an instruction, which query() then
+    ranks and rag_answer() feeds to the model as 'context'.
+    """
+
+    def __init__(self, model: str = EMBED_MODEL):
+        self.model = model
+        self.docs: list[dict] = []   # {id, text, meta, vec}
+
+    def add(self, text: str, doc_id: str | None = None, **meta) -> None:
+        self.docs.append({
+            "id": doc_id or f"doc{len(self.docs)}",
+            "text": text, "meta": meta, "vec": embed(text, self.model),
+        })
+
+    def add_many(self, texts: list[str], **meta) -> None:
+        for t in texts:
+            self.add(t, **meta)
+
+    def query(self, text: str, k: int = 3) -> list[dict]:
+        """Top-k by cosine. Each hit carries its score so a lab can show a
+        poisoned document ranking above the legitimate ones."""
+        qv = embed(text, self.model)
+        scored = [{**d, "score": cosine(qv, d["vec"])} for d in self.docs]
+        return sorted(scored, key=lambda d: d["score"], reverse=True)[:k]
+
+
+def rag_answer(store: "VectorStore", question: str, k: int = 3,
+               system: str = "Answer the user using only the context provided.",
+               model: str = DEFAULT_TARGET, temperature: float = 0.0) -> dict:
+    """The vulnerable RAG pipeline the Module 4 attacks target: retrieve, stuff
+    the retrieved text into the prompt as trusted context, answer. Returns the
+    reply and the retrieved docs, so a lab can show which poisoned chunk was
+    pulled in."""
+    hits = store.query(question, k)
+    context = "\n\n".join(f"[{h['id']}] {h['text']}" for h in hits)
+    prompt = f"Context:\n{context}\n\nQuestion: {question}"
+    reply = Chat(system=system, model=model, temperature=temperature, check=False)(prompt)
+    return {"reply": reply, "retrieved": hits, "context": context}
+
+
+# --- a local listener, for the exfiltration attacks -------------------------
+
+class Listener:
+    """A throwaway HTTP server on a background thread that records every request
+    path it receives. The exfil labs trick the model into fetching a URL - a
+    markdown image, a 'verification pixel' - with a secret in the query string;
+    this is the attacker's server that catches it. Loopback only.
+
+        with Listener() as cap:
+            ...                      # run the attack
+            print(cap.hits)          # the paths the model called back on
+    """
+
+    def __init__(self, port: int = 9999):
+        self.port = port
+        self.hits: list[str] = []
+        self._httpd = None
+        self._thread = None
+
+    def __enter__(self):
+        import http.server, threading
+        cap = self
+
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                cap.hits.append(self.path)
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.end_headers()
+                self.wfile.write(b"\x89PNG\r\n")  # a plausible 1x1, content irrelevant
+
+            def log_message(self, *a):
+                pass
+
+        self._httpd = http.server.HTTPServer(("127.0.0.1", self.port), H)
+        self._thread = threading.Thread(target=self._httpd.serve_forever, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        if self._httpd:
+            self._httpd.shutdown()
+            self._httpd.server_close()
+
+    def exfiltrated(self, secret: str) -> list[str]:
+        """The paths that carried the secret - the attack's pass/fail."""
+        return [h for h in self.hits if secret in h]
+
+
 # --- verdicts: the "look for X in the output" step, made checkable ----------
 
 REFUSAL_MARKERS = (
