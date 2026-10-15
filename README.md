@@ -16,9 +16,11 @@ already served on `127.0.0.1:11434` (Ollama).
     module06_agentic.ipynb            Labs 51-60  — agentic exploitation & MCP (LLM06)
     module07_zero_trust.ipynb         Labs 61-70  — zero-trust orchestration (LLM06 defences)
     module08_inversion_privacy.ipynb  Labs 71-80  — inversion, extraction, privacy (LLM02/10)
+    module10_redteam_capstone.ipynb   Labs 91-100 — red teaming, compliance, capstone (full OWASP)
+    docs/module09-hardware-writeup.md Labs 81-90  — hardware-rooted security (read-only write-up)
     docs/not-runnable-labs.md         write-ups for labs that need infra/hardware/GPU
     labs-source.md                    extracted course text (gitignored — paid content)
-    (modules 9-10 + gap modules in progress)
+    (gap modules LLM05/LLM03/LLM09 in progress)
 
 ## OWASP Top 10 for LLM (2025) anchoring
 
