@@ -22,6 +22,17 @@ already served on `127.0.0.1:11434` (Ollama).
     gap_llm05_output_handling.ipynb   LLM05 — output handling: XSS/SQLi/SSTI/cmd/path (course gap)
     gap_llm03_supply_chain.ipynb      LLM03 — supply chain: integrity/pickle/pinning/typosquat/BOM
     gap_llm09_misinformation.ipynb    LLM09 — misinformation: hallucination, grounding, verification
+    efficacy_llm01_defences.ipynb     LLM01 — do injection defences work (hardening backfires)
+    efficacy_llm02_sensitive_info.ipynb  LLM02 — PII redaction + output secret-scanning
+    efficacy_llm03_supply_chain.ipynb    LLM03 — hash-verify / safe-unpickle / typosquat
+    efficacy_llm04_poisoning.ipynb       LLM04 — signing vs framing vs anomaly on a RAG poison
+    efficacy_llm05_output.ipynb       LLM05 — encoding / parameterisation / schema
+    efficacy_llm06_agency.ipynb          LLM06 — path / contract / crypto-HITL / step-cap
+    efficacy_llm07_system_prompt.ipynb   LLM07 — no-secret-in-prompt vs hardening vs scrub
+    efficacy_llm08_vector.ipynb          LLM08 — clearance-scoped retrieval, signed provenance
+    efficacy_llm09_misinformation.ipynb  LLM09 — grounding / cosine / entailment judge
+    efficacy_llm10_consumption.ipynb     LLM10 — token quota / step cap / deadline
+    docs/mitigation-efficacy-summary.md  one-page expected-vs-actual across all 10 classes
     labs-source.md                    extracted course text (gitignored — paid content)
 
 ## OWASP Top 10 for LLM (2025) anchoring
@@ -40,6 +51,23 @@ framework rather than the course's arbitrary numbering:
 
 The *gap* rows are classes the Udemy course under-covers; built as extra modules on the same
 harness, same executed-clean bar.
+
+## Does each mitigation actually work? — per-section efficacy (all 10)
+
+Every OWASP section recommends a mitigation. Each `efficacy_llmNN_*.ipynb` *measures* its section's
+mitigation against a real attack on the local model and prints an expected-vs-actual table — the
+numbers come from the executed run, they are not asserted. `docs/mitigation-efficacy-summary.md`
+collects all ten onto one page. The pattern that falls out:
+
+| control type | efficacy | examples |
+|---|---|---|
+| structural / deterministic | **holds** | signing, parameterisation, encoding, hash-verify, crypto HITL, quotas, path/schema checks |
+| detection (model/stat) | holds *if* tuned/capable | semantic filter (FP cost), entailment judge, anomaly detection (needs data) |
+| behavioural / prompt-level | **unreliable, can backfire** | prompt hardening (LLM01), retrieved-content framing (LLM04/08), instruction hardening (LLM07) |
+
+The sections whose primary control is prompt-level (LLM01, LLM04/08, LLM07) are exactly where the
+measurement contradicts the expected efficacy on this 7B. Measured, not assumed — a stronger model
+may narrow the gap, so the transferable result is the ranking of control types, not the percentages.
 
 ## Run
 
