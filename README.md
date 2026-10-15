@@ -69,6 +69,11 @@ The sections whose primary control is prompt-level (LLM01, LLM04/08, LLM07) are 
 measurement contradicts the expected efficacy on this 7B. Measured, not assumed — a stronger model
 may narrow the gap, so the transferable result is the ranking of control types, not the percentages.
 
+Each lab stands in for a real incident. `docs/real-world-exploits.md` links every OWASP class to the
+public attacks and research it reproduces — the Bing "Sydney" leak, the Chevrolet $1 Tahoe, EchoLeak
+(CVE-2025-32711), PoisonGPT, Air Canada's hallucinating chatbot, and others — mapped to the notebook
+that measures the matching defence.
+
 ## Run
 
     ollama serve                       # if not already running
