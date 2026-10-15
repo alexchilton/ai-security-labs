@@ -129,3 +129,50 @@ GPU, Labs 81/83 become runnable there — not on this laptop.
 | 40 DNS C2 | raw sockets + root | HTTP callback (`Listener`) | Linux host + sudo |
 | 18 GCG | gradients/weights | single-step `raw` cell | the RTX 3080 box |
 | 81–83, 90 | TPM / CC hardware | read-only | hardware with TPM/SEV |
+
+---
+
+## Module 7 infrastructure (added)
+
+### Lab 62 — gVisor sandboxed tool execution
+Run agent-invoked code inside gVisor (`runsc`) so a compromised tool can't reach the host kernel.
+**Why not a notebook:** user-space kernel installed as a Docker runtime, needs root.
+**Substitute:** summarised. A lighter local stand-in: run tool code in a `subprocess` with
+`resource` limits + seccomp, or a short-lived container.
+**Real version:** install `runsc`, register as a Docker runtime, launch tool containers with
+`runtimeClassName: gvisor`.
+
+### Lab 66 — Ephemeral execution workspaces
+K8s Job with `ttlSecondsAfterFinished` + `emptyDir`, so the sandbox and its data vaporise after the
+task. **Why not a notebook:** needs a Kubernetes cluster. **Real version:** `kubectl apply` the Job
+manifest; watch the Pod and its RAM-backed volume disappear on completion.
+
+### Lab 69 — Network segmentation for agents
+Separate namespaces (brain / tools / data) with a default-deny `NetworkPolicy`, so a compromised
+agent can't reach the database. **Why not a notebook:** needs K8s + a CNI enforcing policy (Cilium).
+**Real version:** `kubectl create namespace`, apply a default-deny policy, poke holes only for
+required flows. Bounds the blast radius at the network layer.
+
+---
+
+## Module 8 — research frameworks
+
+### Lab 74 — Gradient inversion / data reconstruction
+Reconstruct a training image from the gradients a device leaks during federated training, using the
+`breaching` framework on a ResNet/LeNet victim.
+**Why not a notebook here:** `breaching` is a research framework; a meaningful run wants a GPU and
+non-trivial setup, and the result is an image-reconstruction pipeline, not a quick cell.
+**Substitute:** the *principle* (gradients leak the data that produced them) is stated; the defence
+(differential privacy, Lab 75) is implemented.
+**Real version:** `pip install breaching torch torchvision`, load a victim model, compute the
+gradient of a private image, run the inversion attack to recover it. Runs on the RTX 3080 box.
+
+### Lab 79 — FHE blind inference
+Run inference on encrypted inputs with fully homomorphic encryption (Concrete ML), so the server
+computes a result without ever seeing the plaintext.
+**Why not a notebook here:** Concrete ML needs specific C++ toolchains, shipped as a Docker image;
+FHE compilation and inference are slow and environment-sensitive.
+**Substitute:** written up. The guarantee (server learns nothing about the input or output) is the
+teaching point.
+**Real version:** `docker run zamafhe/concrete-ml`, compile a small `NeuralNetClassifier` to an FHE
+circuit, run `.predict` on encrypted data, decrypt client-side.

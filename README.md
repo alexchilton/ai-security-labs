@@ -9,11 +9,16 @@ already served on `127.0.0.1:11434` (Ollama).
 ## Layout
 
     labkit.py                      the model, the RAG store, the "look for X in the output" check
-    module02_injection.ipynb       Labs 11-20  — prompt injection & jailbreaking
-    module03_guardrails.ipynb      Labs 21-30  — input/output guardrails
-    module04_rag_poisoning.ipynb   Labs 31-40  — RAG poisoning & exfiltration
-    labs-source.md                 extracted course text (gitignored — paid content)
-    (more modules added as built)
+    module02_injection.ipynb          Labs 11-20  — prompt injection & jailbreaking (LLM01)
+    module03_guardrails.ipynb         Labs 21-30  — input/output guardrails (LLM01 defences)
+    module04_rag_poisoning.ipynb      Labs 31-40  — RAG poisoning & exfiltration (LLM04/08)
+    module05_securing_rag.ipynb       Labs 41-50  — securing the vector store (LLM08 defences)
+    module06_agentic.ipynb            Labs 51-60  — agentic exploitation & MCP (LLM06)
+    module07_zero_trust.ipynb         Labs 61-70  — zero-trust orchestration (LLM06 defences)
+    module08_inversion_privacy.ipynb  Labs 71-80  — inversion, extraction, privacy (LLM02/10)
+    docs/not-runnable-labs.md         write-ups for labs that need infra/hardware/GPU
+    labs-source.md                    extracted course text (gitignored — paid content)
+    (modules 9-10 + gap modules in progress)
 
 ## OWASP Top 10 for LLM (2025) anchoring
 
